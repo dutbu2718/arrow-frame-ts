@@ -11,8 +11,17 @@ export type Value =
 
 export type Schema = Record<string, Value>;
 
-export type Operation = {
+export type Compute = () => Vector;
+
+export type DeriveOperation = {
   readonly _operation: "derive";
-  id: "string";
-  compute: () => Vector;
+  readonly id: "string";
+  readonly compute: Compute;
 };
+
+export type SelectOperation = {
+  readonly _operation: "select";
+  readonly columns: readonly string[];
+};
+
+export type Operation = DeriveOperation | SelectOperation;
