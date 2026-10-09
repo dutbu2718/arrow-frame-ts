@@ -9,7 +9,7 @@ export type Value =
   | Uint8Array
   | undefined;
 
-export type FrameSchema = Record<string, Value>;
+export type Schema = Record<string, Value>;
 
 export type Operation = {
   readonly _operation: "derive";
