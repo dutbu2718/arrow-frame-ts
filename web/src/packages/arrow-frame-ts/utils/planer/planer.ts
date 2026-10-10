@@ -6,6 +6,10 @@ import { Column } from "../../column";
 import { cloneCache, createCacheByIds, createCacheFromTable } from "./utils";
 import type { Frame } from "./types";
 
+/**
+ * @description
+ * The planer registers deferred computations for execution.
+ */
 export class Planer {
   private sourceRows!: number;
   private selections: readonly string[] | undefined;

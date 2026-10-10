@@ -10,6 +10,10 @@ import type {
 import { Planer } from "./utils/planer/planer";
 import type { Frame } from "./utils/planer/types";
 
+/**
+ * @description
+ * A Fluent API to build operations into a program.
+ */
 export class DataFrame<S extends Schema> {
   constructor(
     private readonly program: Operation[],

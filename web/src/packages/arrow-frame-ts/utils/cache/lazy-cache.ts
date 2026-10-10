@@ -6,6 +6,10 @@ import {
   type Validator,
 } from "./types";
 
+/**
+ * @description
+ * Executes thunks on-demand and memoizes results.
+ */
 export class LazyCache<K, V> implements Cache<K, V> {
   private readonly entries = new Map<K, CacheEntry<K, V>>();
 
