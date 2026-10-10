@@ -32,7 +32,7 @@ const frame = DataFrame.from(() => source)
         kpi[i] = Math.round(energy[i] / atemp[i]);
       }
 
-      return Column.fromArrow<Value>(vectorFromArray(kpi));
+      return Column.from<Value>(vectorFromArray(kpi));
     },
   })
   .derive({
@@ -50,7 +50,7 @@ const frame = DataFrame.from(() => source)
         if (i >= 11) r12[i] = sum;
       }
 
-      return Column.fromArrow<Value>(vectorFromArray(r12));
+      return Column.from<Value>(vectorFromArray(r12));
     },
   })
   .select();

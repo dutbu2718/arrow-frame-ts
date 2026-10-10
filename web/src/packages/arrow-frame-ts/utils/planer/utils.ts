@@ -8,7 +8,7 @@ export function createCache(table: Table) {
 
   for (const { name } of table.schema.fields) {
     cache.defer(name, {
-      thunk: () => Column.fromArrow<Value>(table.getChild(name)!),
+      thunk: () => Column.from<Value>(table.getChild(name)!),
     });
   }
 

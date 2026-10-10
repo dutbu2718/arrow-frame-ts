@@ -4,7 +4,7 @@ import type { Value } from "./types";
 export class Column<T extends Value> {
   private constructor(private readonly _vector: Vector) {}
 
-  static fromArrow<T extends Value>(vector: Vector): Column<T> {
+  static from<T extends Value>(vector: Vector): Column<T> {
     return new Column<T>(vector);
   }
 
