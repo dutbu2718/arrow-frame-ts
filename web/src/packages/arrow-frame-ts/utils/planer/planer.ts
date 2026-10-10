@@ -13,7 +13,7 @@ export class Planer {
   execute(
     program: readonly Operation[],
     source: SourceLoader<Table>,
-    cache?: CacheLoader,
+    cache: CacheLoader | undefined,
   ): Frame<Table> {
     const _source = source();
 
