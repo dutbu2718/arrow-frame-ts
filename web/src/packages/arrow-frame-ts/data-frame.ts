@@ -21,11 +21,11 @@ export class DataFrame<S extends Schema> {
     return new DataFrame<S>([], source, undefined);
   }
 
-  static fromFrame<S extends Schema>(snapshot: () => Frame<Table>) {
+  static fromFrame<S extends Schema>(frame: () => Frame<Table>) {
     return new DataFrame<S>(
       [],
-      () => snapshot().value,
-      () => snapshot().cache,
+      () => frame().value,
+      () => frame().cache,
     );
   }
 
