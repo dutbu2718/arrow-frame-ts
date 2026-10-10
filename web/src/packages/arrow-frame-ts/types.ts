@@ -1,5 +1,6 @@
 import type { Vector } from "apache-arrow";
 import type { Column } from "./column";
+import type { Thunk } from "./utils/cache/types";
 
 export type Value =
   | string
@@ -24,16 +25,10 @@ export type Compute<S extends Schema, T extends Value> = (
 
 export type RuntimeRow = Record<string, Value>;
 
-export interface RuntimeColumnCollection {
-  get(id: string): Column<Value>;
-  set(id: string, column: Column<Value>): void;
-  has(id: string): boolean;
-}
-
 export interface DeriveOperation {
   readonly operation: "derive";
   readonly id: string;
-  readonly compute: (collection: RuntimeColumnCollection) => Column<Value>;
+  readonly compute: Thunk<string, Column<Value>>;
 }
 
 export interface FilterOperation {
@@ -43,7 +38,7 @@ export interface FilterOperation {
 
 export interface SelectOperation {
   readonly operation: "select";
-  readonly columns: readonly string[];
+  readonly columns?: readonly string[];
 }
 
 export type Operation = DeriveOperation | SelectOperation;

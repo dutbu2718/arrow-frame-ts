@@ -1,8 +1,8 @@
 import type { Table } from "apache-arrow";
 import type {
-  Schema,
-  Operation,
   DeriveOperation,
+  Operation,
+  Schema,
   SelectOperation,
 } from "./types";
 import { Planer } from "./planer";
@@ -18,18 +18,22 @@ export class Frame<S extends Schema> {
   }
 
   derived(option: Pick<DeriveOperation, "id" | "compute">) {
-    return this.append({
-      operation: "derive",
-      id: option.id,
-      compute: option.compute,
-    } satisfies DeriveOperation);
+    return this.append(
+      {
+        operation: "derive",
+        id: option.id,
+        compute: option.compute,
+      } satisfies DeriveOperation,
+    );
   }
 
-  select(ids: readonly string[]) {
-    return this.append({
-      operation: "select",
-      columns: [...ids],
-    } satisfies SelectOperation);
+  select(ids?: readonly string[]) {
+    return this.append(
+      {
+        operation: "select",
+        columns: ids,
+      } satisfies SelectOperation,
+    );
   }
 
   collect() {

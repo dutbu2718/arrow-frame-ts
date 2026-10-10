@@ -1,17 +1,19 @@
 import { Table, Vector } from "apache-arrow";
-import type { Operation } from "./types";
-import { gatherColumn } from "./utils";
-import { ColumnCache } from "./column-cache";
+import type { Operation, Value } from "./types";
+import { validateColumnLength } from "./utils";
+import { LazyCache } from "./utils/cache/lazy-cache";
+import { Column } from "./column";
 
 export class Planer {
-  private readonly cache: ColumnCache;
+  private readonly cache: LazyCache<string, Column<Value>>;
+  private readonly sourceRows: number;
 
-  private rows: Uint32Array | undefined;
   private rowCount: number;
   private selections: readonly string[] | undefined;
 
   constructor(source: Table) {
-    this.cache = new ColumnCache(source);
+    this.cache = createPlanerCache(source);
+    this.sourceRows = source.numRows;
     this.rowCount = source.numRows;
   }
 
@@ -19,7 +21,16 @@ export class Planer {
     for (const operation of program) {
       switch (operation.operation) {
         case "derive":
-          this.cache.lazyDerive(operation.id, operation.compute);
+          this.cache.defer(operation.id, {
+            thunk: operation.compute,
+            validate: (column) => {
+              validateColumnLength(
+                operation.id,
+                column.vector,
+                this.sourceRows,
+              );
+            },
+          });
           break;
 
         case "select":
@@ -34,14 +45,21 @@ export class Planer {
     const output: Record<string, Vector> = {};
 
     for (const id of this.selections ?? this.cache.keys()) {
-      const column = this.cache.get(id);
-
-      output[id] =
-        this.rows === undefined
-          ? column.vector
-          : gatherColumn(column.vector, this.rows, this.rowCount);
+      output[id] = this.cache.get(id).vector;
     }
 
     return new Table(output);
   }
+}
+
+function createPlanerCache(source: Table) {
+  const cache = new LazyCache<string, Column<Value>>();
+
+  for (const { name } of source.schema.fields) {
+    cache.defer(name, {
+      thunk: () => Column.fromArrow<Value>(source.getChild(name)!),
+    });
+  }
+
+  return cache;
 }

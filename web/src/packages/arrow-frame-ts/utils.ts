@@ -16,9 +16,9 @@ export function createRowIndices(length: number): Uint32Array {
 }
 
 export function validateColumnLength(
+  id: string,
   column: Vector,
   expectedLength: number,
-  id: string,
 ): void {
   if (column.length !== expectedLength) {
     throw new Error(

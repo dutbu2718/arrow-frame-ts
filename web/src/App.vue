@@ -20,8 +20,8 @@ const frame = Frame.from(source)
   .derived({
     id: "kpi",
     compute: (c) => {
-      const energy = c.get("energy").array as Float64Array;
-      const atemp = c.get("atemp").array as Float64Array;
+      const energy = c.get("energy").values as Float64Array;
+      const atemp = c.get("atemp").values as Float64Array;
 
       const kpi = new Float64Array(energy.length);
 
@@ -33,9 +33,9 @@ const frame = Frame.from(source)
     },
   })
   .derived({
-    id: "12",
+    id: "r12",
     compute: (c) => {
-      const kpi = c.get("kpi").array as Float64Array;
+      const kpi = c.get("kpi").values as Float64Array;
 
       const n = kpi.length;
       const r12 = new Float64Array(n);
@@ -49,7 +49,8 @@ const frame = Frame.from(source)
 
       return Column.fromArrow<Value>(vectorFromArray(r12));
     },
-  });
+  })
+  .select();
 
 function run() {
   const t0 = performance.now();
