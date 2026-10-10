@@ -4,16 +4,17 @@ import type {
   Operation,
   Schema,
   SelectOperation,
+  SourceLoader,
 } from "./types";
 import { Planer } from "./planer";
 
 export class Frame<S extends Schema> {
   constructor(
-    private readonly source: Table,
+    private readonly source: SourceLoader<Table>,
     private readonly program: Operation[],
   ) {}
 
-  static from<S extends Schema>(source: Table) {
+  static from<S extends Schema>(source: SourceLoader<Table>) {
     return new Frame<S>(source, []);
   }
 

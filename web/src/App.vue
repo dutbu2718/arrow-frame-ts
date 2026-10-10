@@ -7,16 +7,19 @@ import { onMounted } from "vue";
 
 const N = 1000000;
 
-const source = tableFromArrays({
-  energy: Float64Array.from({ length: N }, () =>
-    Math.round(100 + Math.random() * 400),
-  ),
-  atemp: Float64Array.from({ length: N }, () =>
-    Math.round(5 + Math.random() * 30),
-  ),
-});
+const sourceFn = () =>
+  tableFromArrays({
+    energy: Float64Array.from({ length: N }, () =>
+      Math.round(100 + Math.random() * 400),
+    ),
+    atemp: Float64Array.from({ length: N }, () =>
+      Math.round(5 + Math.random() * 30),
+    ),
+  });
 
-const frame = Frame.from(source)
+const source = sourceFn();
+
+const frame = Frame.from(() => source)
   .derive({
     id: "kpi",
     compute: (c) => {
