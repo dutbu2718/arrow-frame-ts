@@ -5,6 +5,7 @@ import type {
   DeriveOperation,
   SelectOperation,
 } from "./types";
+import { Planer } from "./planer";
 
 export class Frame<S extends Schema> {
   constructor(
@@ -12,28 +13,30 @@ export class Frame<S extends Schema> {
     private readonly program: Operation[],
   ) {}
 
-  from<S extends Schema>(source: Table) {
+  static from<S extends Schema>(source: Table) {
     return new Frame<S>(source, []);
   }
 
   derived(option: Pick<DeriveOperation, "id" | "compute">) {
-    return this.add({
-      _operation: "derive",
+    return this.append({
+      operation: "derive",
       id: option.id,
       compute: option.compute,
     } satisfies DeriveOperation);
   }
 
   select(ids: readonly string[]) {
-    return this.add({
-      _operation: "select",
+    return this.append({
+      operation: "select",
       columns: [...ids],
     } satisfies SelectOperation);
   }
 
-  collect() {}
+  collect() {
+    return new Planer(this.source).execute(this.program);
+  }
 
-  private add<S extends Schema>(operation: Operation) {
+  private append<S extends Schema>(operation: Operation) {
     return new Frame<S>(this.source, [...this.program, operation]);
   }
 }
