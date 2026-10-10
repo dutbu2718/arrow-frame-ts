@@ -29,4 +29,6 @@ export interface Cache<K, V> extends CacheAccessor<K, V> {
   ): void;
   set(key: K, value: V): void;
   keys(): MapIterator<K>;
+  copyEntry(key: K): CacheEntry<K, V> | undefined;
+  addEntry(key: K, entry: CacheEntry<K, V>): void;
 }

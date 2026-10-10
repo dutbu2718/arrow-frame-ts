@@ -71,4 +71,22 @@ export class LazyCache<K, V> implements Cache<K, V> {
   keys() {
     return this.entries.keys();
   }
+
+  copyEntry(key: K): CacheEntry<K, V> | undefined {
+    const entry = this.entries.get(key);
+
+    if (!entry) {
+      return undefined;
+    }
+
+    return { ...entry };
+  }
+
+  addEntry(key: K, entry: CacheEntry<K, V>): void {
+    if (this.entries.has(key)) {
+      throw new Error(`"${String(key)}" already exists`);
+    }
+
+    this.entries.set(key, { ...entry });
+  }
 }

@@ -57,7 +57,7 @@ const frame = Frame.from(() => source)
 
 function run() {
   const t0 = performance.now();
-  const result = frame.collect();
+  const result = frame.collect().value;
   const ms = (performance.now() - t0).toFixed(1);
 
   console.log(`${result.numRows} rows in ${ms} ms`);

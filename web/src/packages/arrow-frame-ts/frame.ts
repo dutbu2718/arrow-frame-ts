@@ -1,21 +1,32 @@
 import type { Table } from "apache-arrow";
 import type {
+  CacheLoader,
   DeriveOperation,
   Operation,
   Schema,
   SelectOperation,
   SourceLoader,
 } from "./types";
-import { Planer } from "./planer";
+import { Planer } from "./utils/planer/planer";
+import type { FrameSnapshot } from "./utils/planer/types";
 
 export class Frame<S extends Schema> {
   constructor(
-    private readonly source: SourceLoader<Table>,
     private readonly program: Operation[],
+    private readonly source: SourceLoader<Table>,
+    private readonly cache?: CacheLoader,
   ) {}
 
   static from<S extends Schema>(source: SourceLoader<Table>) {
-    return new Frame<S>(source, []);
+    return new Frame<S>([], source);
+  }
+
+  static fromSnapshot<S extends Schema>(snapshot: () => FrameSnapshot<Table>) {
+    return new Frame<S>(
+      [],
+      () => snapshot().value,
+      () => snapshot().cache,
+    );
   }
 
   derive(option: Pick<DeriveOperation, "id" | "compute">) {
@@ -33,11 +44,11 @@ export class Frame<S extends Schema> {
     } satisfies SelectOperation);
   }
 
-  collect() {
-    return new Planer(this.source).execute(this.program);
+  collect(): FrameSnapshot<Table> {
+    return new Planer().execute(this.program, this.source, this.cache);
   }
 
   private append<S extends Schema>(operation: Operation) {
-    return new Frame<S>(this.source, [...this.program, operation]);
+    return new Frame<S>([...this.program, operation], this.source);
   }
 }
