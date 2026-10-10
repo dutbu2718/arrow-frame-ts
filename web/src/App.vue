@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { tableFromArrays, vectorFromArray } from "apache-arrow";
 import { Column } from "./packages/arrow-frame-ts/column.ts";
-import { Frame } from "./packages/arrow-frame-ts/frame.ts";
+import { DataFrame } from "./packages/arrow-frame-ts/data-frame.ts";
 import type { Value } from "./packages/arrow-frame-ts/types.ts";
 import { onMounted } from "vue";
 
@@ -19,7 +19,7 @@ const sourceFn = () =>
 
 const source = sourceFn();
 
-const frame = Frame.from(() => source)
+const frame = DataFrame.from(() => source)
   .derive({
     id: "kpi",
     compute: (c) => {

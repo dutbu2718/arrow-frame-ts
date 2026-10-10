@@ -10,7 +10,7 @@ import type {
 import { Planer } from "./utils/planer/planer";
 import type { FrameSnapshot } from "./utils/planer/types";
 
-export class Frame<S extends Schema> {
+export class DataFrame<S extends Schema> {
   constructor(
     private readonly program: Operation[],
     private readonly source: SourceLoader<Table>,
@@ -18,11 +18,11 @@ export class Frame<S extends Schema> {
   ) {}
 
   static from<S extends Schema>(source: SourceLoader<Table>) {
-    return new Frame<S>([], source);
+    return new DataFrame<S>([], source);
   }
 
   static fromSnapshot<S extends Schema>(snapshot: () => FrameSnapshot<Table>) {
-    return new Frame<S>(
+    return new DataFrame<S>(
       [],
       () => snapshot().value,
       () => snapshot().cache,
@@ -49,6 +49,6 @@ export class Frame<S extends Schema> {
   }
 
   private append<S extends Schema>(operation: Operation) {
-    return new Frame<S>([...this.program, operation], this.source);
+    return new DataFrame<S>([...this.program, operation], this.source);
   }
 }

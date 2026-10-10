@@ -1,4 +1,4 @@
 export * from "./types";
 
 export * from "./column";
-export * from "./frame";
+export * from "./data-frame";
