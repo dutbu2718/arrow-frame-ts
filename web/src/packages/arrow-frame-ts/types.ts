@@ -1,4 +1,3 @@
-import type { Vector } from "apache-arrow";
 import type { Column } from "./column";
 import type { Thunk } from "./utils/cache/types";
 

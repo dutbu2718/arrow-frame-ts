@@ -17,23 +17,19 @@ export class Frame<S extends Schema> {
     return new Frame<S>(source, []);
   }
 
-  derived(option: Pick<DeriveOperation, "id" | "compute">) {
-    return this.append(
-      {
-        operation: "derive",
-        id: option.id,
-        compute: option.compute,
-      } satisfies DeriveOperation,
-    );
+  derive(option: Pick<DeriveOperation, "id" | "compute">) {
+    return this.append({
+      operation: "derive",
+      id: option.id,
+      compute: option.compute,
+    } satisfies DeriveOperation);
   }
 
   select(ids?: readonly string[]) {
-    return this.append(
-      {
-        operation: "select",
-        columns: ids,
-      } satisfies SelectOperation,
-    );
+    return this.append({
+      operation: "select",
+      columns: ids,
+    } satisfies SelectOperation);
   }
 
   collect() {

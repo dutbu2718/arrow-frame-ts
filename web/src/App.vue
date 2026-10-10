@@ -17,7 +17,7 @@ const source = tableFromArrays({
 });
 
 const frame = Frame.from(source)
-  .derived({
+  .derive({
     id: "kpi",
     compute: (c) => {
       const energy = c.get("energy").values as Float64Array;
@@ -32,7 +32,7 @@ const frame = Frame.from(source)
       return Column.fromArrow<Value>(vectorFromArray(kpi));
     },
   })
-  .derived({
+  .derive({
     id: "r12",
     compute: (c) => {
       const kpi = c.get("kpi").values as Float64Array;
