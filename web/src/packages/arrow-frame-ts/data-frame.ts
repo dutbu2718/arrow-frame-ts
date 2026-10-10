@@ -8,20 +8,20 @@ import type {
   SourceLoader,
 } from "./types";
 import { Planer } from "./utils/planer/planer";
-import type { FrameSnapshot } from "./utils/planer/types";
+import type { Frame } from "./utils/planer/types";
 
 export class DataFrame<S extends Schema> {
   constructor(
     private readonly program: Operation[],
     private readonly source: SourceLoader<Table>,
-    private readonly cache?: CacheLoader,
+    private readonly cache: CacheLoader | undefined,
   ) {}
 
   static from<S extends Schema>(source: SourceLoader<Table>) {
-    return new DataFrame<S>([], source);
+    return new DataFrame<S>([], source, undefined);
   }
 
-  static fromSnapshot<S extends Schema>(snapshot: () => FrameSnapshot<Table>) {
+  static fromFrame<S extends Schema>(snapshot: () => Frame<Table>) {
     return new DataFrame<S>(
       [],
       () => snapshot().value,
@@ -44,11 +44,15 @@ export class DataFrame<S extends Schema> {
     } satisfies SelectOperation);
   }
 
-  collect(): FrameSnapshot<Table> {
+  collect(): Frame<Table> {
     return new Planer().execute(this.program, this.source, this.cache);
   }
 
   private append<S extends Schema>(operation: Operation) {
-    return new DataFrame<S>([...this.program, operation], this.source);
+    return new DataFrame<S>(
+      [...this.program, operation],
+      this.source,
+      this.cache,
+    );
   }
 }

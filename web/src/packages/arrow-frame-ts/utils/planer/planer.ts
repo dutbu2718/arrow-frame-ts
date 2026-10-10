@@ -4,7 +4,7 @@ import { validateColumnLength } from "../../utils";
 import { LazyCache } from "../cache/lazy-cache";
 import { Column } from "../../column";
 import { createCache, pruneCache } from "./utils";
-import type { FrameSnapshot } from "./types";
+import type { Frame } from "./types";
 
 export class Planer {
   private sourceRows!: number;
@@ -14,7 +14,7 @@ export class Planer {
     program: readonly Operation[],
     source: SourceLoader<Table>,
     cache?: CacheLoader,
-  ): FrameSnapshot<Table> {
+  ): Frame<Table> {
     const _source = source();
 
     // Init
