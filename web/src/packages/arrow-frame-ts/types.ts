@@ -12,16 +12,6 @@ export type Value =
 
 export type Schema = Record<string, Value>;
 
-export interface ColumnCollection<S extends Schema = Schema> {
-  get<K extends keyof S & string>(id: K): Column<S[K]>;
-  set<K extends keyof S & string>(id: K, column: Column<S[K]>): void;
-  has<K extends keyof S & string>(id: K): boolean;
-}
-
-export type Compute<S extends Schema, T extends Value> = (
-  columns: ColumnCollection<S>,
-) => Column<T>;
-
 export type RuntimeRow = Record<string, Value>;
 
 export interface DeriveOperation {
