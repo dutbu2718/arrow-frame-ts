@@ -30,18 +30,22 @@ export class DataFrame<S extends Schema> {
   }
 
   derive(option: Pick<DeriveOperation, "id" | "compute">) {
-    return this.append({
-      operation: "derive",
-      id: option.id,
-      compute: option.compute,
-    } satisfies DeriveOperation);
+    return this.append(
+      {
+        operation: "derive",
+        id: option.id,
+        compute: option.compute,
+      } satisfies DeriveOperation,
+    );
   }
 
   select(ids?: readonly string[]) {
-    return this.append({
-      operation: "select",
-      columns: ids,
-    } satisfies SelectOperation);
+    return this.append(
+      {
+        operation: "select",
+        columns: ids,
+      } satisfies SelectOperation,
+    );
   }
 
   collect(): Frame<Table> {

@@ -3,7 +3,7 @@ import type { CacheLoader, Operation, SourceLoader, Value } from "../../types";
 import { validateColumnLength } from "../../utils";
 import { LazyCache } from "../cache/lazy-cache";
 import { Column } from "../../column";
-import { createCache, pruneCache } from "./utils";
+import { cloneCache, createCacheByIds, createCacheFromTable } from "./utils";
 import type { Frame } from "./types";
 
 export class Planer {
@@ -17,8 +17,8 @@ export class Planer {
   ): Frame<Table> {
     const _source = source();
 
-    // Init
-    const _cache = cache ? cache() : createCache(_source);
+    // Clone so we never mutates the parent's cache
+    const _cache = cache ? cloneCache(cache()) : createCacheFromTable(_source);
     this.sourceRows = _source.numRows;
 
     this.buildPlan(program, _cache);
@@ -32,7 +32,7 @@ export class Planer {
 
     return {
       value: new Table(output),
-      cache: pruneCache(ids, _cache),
+      cache: createCacheByIds(ids, _cache),
     };
   }
 
