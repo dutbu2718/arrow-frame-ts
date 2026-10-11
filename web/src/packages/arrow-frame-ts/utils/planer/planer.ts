@@ -37,7 +37,7 @@ export class Planer {
     const ids = this.selections ?? Array.from(_cache.keys());
 
     const context: OperationContext = {
-      get: (key) => {
+      col: (key) => {
         return _cache.get(key);
       },
     } as const;

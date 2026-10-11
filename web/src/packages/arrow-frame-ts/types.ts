@@ -23,7 +23,7 @@ export type CacheLoader = () => LazyCache<
 export type RuntimeRow = Record<string, Value>;
 
 export interface OperationContext {
-  readonly get: (columnId: string) => Column<Value>;
+  readonly col: (columnId: string) => Column<Value>;
 }
 
 export interface BaseOperation {

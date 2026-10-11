@@ -9,7 +9,7 @@ import { Table, tableFromArrays, vectorFromArray } from "apache-arrow";
 import { Column } from "./packages/arrow-frame-ts/column.ts";
 import { DataFrame } from "./packages/arrow-frame-ts/data-frame.ts";
 import type { Value } from "./packages/arrow-frame-ts/types.ts";
-import { computed, onMounted, shallowReactive } from "vue";
+import { computed, onMounted, ref, shallowReactive } from "vue";
 import type { Frame } from "./packages/arrow-frame-ts/utils/planer/types.ts";
 
 enum FrameId {
@@ -30,13 +30,15 @@ const source = loadArrow();
 
 const results = shallowReactive(new Map<string, Frame<Table>>());
 
+const r12Window = ref(12);
+
 const base = computed(() => {
   return DataFrame.from(() => source)
     .derive({
       id: "kpi",
       compute: (c) => {
-        const energy = c.get("energy").values as Float64Array;
-        const atemp = c.get("atemp").values as Float64Array;
+        const energy = c.col("energy").values as Float64Array;
+        const atemp = c.col("atemp").values as Float64Array;
 
         const kpi = new Float64Array(energy.length);
 
@@ -50,7 +52,7 @@ const base = computed(() => {
     .derive({
       id: "r12",
       compute: (c) => {
-        const kpi = c.get("kpi").values as Float64Array;
+        const kpi = c.col("kpi").values as Float64Array;
 
         const n = kpi.length;
         const r12 = new Float64Array(n);
@@ -81,7 +83,7 @@ const selectA = computed(() => {
     .derive({
       id: "kpiTrend",
       compute: (c) => {
-        const kpi = c.get("kpi").values as Float64Array;
+        const kpi = c.col("kpi").values as Float64Array;
         const out = kpi.slice();
 
         return Column.from<Value>(vectorFromArray(out));
