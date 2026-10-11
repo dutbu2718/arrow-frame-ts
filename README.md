@@ -11,3 +11,7 @@ I don't know what I am doing. I don't know what I want with this repo. I am tire
 ### Status
 
 <kbd>Experimenting.</kbd>
+
+### Problem space
+
+![Description](web/src/assets/docs/problem-space.svg)
