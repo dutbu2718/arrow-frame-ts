@@ -3,7 +3,6 @@ import type {
   CacheLoader,
   DeriveOperation,
   Operation,
-  Schema,
   SelectOperation,
   SourceLoader,
 } from "./types";
@@ -14,19 +13,19 @@ import type { Frame } from "./utils/planer/types";
  * @description
  * A Fluent API to build operations into a program.
  */
-export class DataFrame<S extends Schema> {
+export class DataFrame {
   constructor(
     private readonly program: Operation[],
     private readonly source: SourceLoader<Table>,
     private readonly cache: CacheLoader | undefined,
   ) {}
 
-  static from<S extends Schema>(source: SourceLoader<Table>) {
-    return new DataFrame<S>([], source, undefined);
+  static from(source: SourceLoader<Table>) {
+    return new DataFrame([], source, undefined);
   }
 
-  static fromFrame<S extends Schema>(frame: () => Frame<Table>) {
-    return new DataFrame<S>(
+  static fromFrame(frame: () => Frame<Table>) {
+    return new DataFrame(
       [],
       () => frame().value,
       () => frame().cache,
@@ -34,33 +33,25 @@ export class DataFrame<S extends Schema> {
   }
 
   derive(option: Pick<DeriveOperation, "id" | "compute">) {
-    return this.append(
-      {
-        operation: "derive",
-        id: option.id,
-        compute: option.compute,
-      } satisfies DeriveOperation,
-    );
+    return this.append({
+      operation: "derive",
+      id: option.id,
+      compute: option.compute,
+    } satisfies DeriveOperation);
   }
 
   select(ids?: readonly string[]) {
-    return this.append(
-      {
-        operation: "select",
-        columns: ids,
-      } satisfies SelectOperation,
-    );
+    return this.append({
+      operation: "select",
+      columns: ids,
+    } satisfies SelectOperation);
   }
 
   collect(): Frame<Table> {
     return new Planer().execute(this.program, this.source, this.cache);
   }
 
-  private append<S extends Schema>(operation: Operation) {
-    return new DataFrame<S>(
-      [...this.program, operation],
-      this.source,
-      this.cache,
-    );
+  private append(operation: Operation) {
+    return new DataFrame([...this.program, operation], this.source, this.cache);
   }
 }
