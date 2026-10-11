@@ -15,3 +15,13 @@ I don't know what I am doing. I don't know what I want with this repo. I am tire
 ### Problem space
 
 ![Description](web/src/assets/docs/problem-space.svg)
+
+<kbd>
+Fetching columnar data from a backend and using it in the browser for data analysis is just the tip of the iceberg (<a href="https://iceberg.apache.org/">pun intended</a>).
+</kbd>
+
+<br>
+
+<kbd>
+Things get more interesting when the frontend needs to create new columns from existing data, without creating them upfront, and avoiding recalculations when the component states they depend on haven't changed.
+</kbd>
