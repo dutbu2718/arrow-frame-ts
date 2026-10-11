@@ -14,11 +14,7 @@ export type Value =
 export type Schema = Record<string, Value>;
 
 export type SourceLoader<T> = () => T;
-export type CacheLoader = () => LazyCache<
-  string,
-  Column<Value>,
-  OperationContext
->;
+export type CacheLoader = () => LazyCache<string, Column<Value>>;
 
 export type RuntimeRow = Record<string, Value>;
 

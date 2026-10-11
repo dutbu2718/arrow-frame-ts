@@ -10,7 +10,7 @@ import {
  * @description
  * Executes thunks on-demand and memoizes results.
  */
-export class LazyCache<K, V, C> implements Cache<K, V, C> {
+export class LazyCache<K, V> implements Cache<K, V> {
   private readonly entries = new Map<K, CacheEntry<V>>();
 
   get(key: K) {
@@ -47,7 +47,7 @@ export class LazyCache<K, V, C> implements Cache<K, V, C> {
   defer(
     key: K,
     expression: {
-      thunk: Thunk<V, C>;
+      thunk: Thunk<V, any>;
       validate?: Validator<V>;
     },
   ): void {
@@ -62,7 +62,7 @@ export class LazyCache<K, V, C> implements Cache<K, V, C> {
     });
   }
 
-  evaluate(key: K, context: C) {
+  evaluate<C>(key: K, context: C) {
     const entry = this.entries.get(key);
 
     if (!entry) {

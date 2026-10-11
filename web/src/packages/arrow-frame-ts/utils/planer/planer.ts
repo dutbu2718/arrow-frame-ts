@@ -54,7 +54,7 @@ export class Planer {
 
   private buildPlan(
     program: readonly Operation[],
-    cache: LazyCache<string, Column<Value>, OperationContext>,
+    cache: LazyCache<string, Column<Value>>,
   ) {
     for (const operation of program) {
       switch (operation.operation) {

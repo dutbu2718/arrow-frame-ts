@@ -20,19 +20,18 @@ export interface CacheAccessor<K, V> {
   keys(): MapIterator<K>;
 }
 
-export interface CacheMemoizer<K, V, C> {
+export interface CacheMemoizer<K, V> {
   defer(
     key: K,
     expression: {
-      thunk: Thunk<V, C>;
+      thunk: Thunk<V, any>;
       validate?: Validator<V>;
     },
   ): void;
-  evaluate(key: K, context: C): V;
+  evaluate<C>(key: K, context: C): V;
 }
 
-export interface Cache<K, V, C>
-  extends CacheAccessor<K, V>, CacheMemoizer<K, V, C> {
+export interface Cache<K, V> extends CacheAccessor<K, V>, CacheMemoizer<K, V> {
   copyEntry(key: K): CacheEntry<V> | undefined;
   addEntry(key: K, entry: CacheEntry<V>): void;
 }
