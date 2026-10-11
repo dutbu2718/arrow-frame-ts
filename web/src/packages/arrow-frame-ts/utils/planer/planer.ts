@@ -1,5 +1,11 @@
 import { Table, Vector } from "apache-arrow";
-import type { CacheLoader, Operation, SourceLoader, Value } from "../../types";
+import type {
+  CacheLoader,
+  Operation,
+  OperationContext,
+  SourceLoader,
+  Value,
+} from "../../types";
 import { validateColumnLength } from "../../utils";
 import { LazyCache } from "../cache/lazy-cache";
 import { Column } from "../../column";
@@ -30,8 +36,14 @@ export class Planer {
     const output: Record<string, Vector> = {};
     const ids = this.selections ?? Array.from(_cache.keys());
 
+    const context: OperationContext = {
+      get: (key) => {
+        return _cache.get(key);
+      },
+    } as const;
+
     for (const id of ids) {
-      output[id] = _cache.get(id).vector;
+      output[id] = _cache.evaluate(id, context).vector;
     }
 
     return {
@@ -42,7 +54,7 @@ export class Planer {
 
   private buildPlan(
     program: readonly Operation[],
-    cache: LazyCache<string, Column<Value>>,
+    cache: LazyCache<string, Column<Value>, OperationContext>,
   ) {
     for (const operation of program) {
       switch (operation.operation) {

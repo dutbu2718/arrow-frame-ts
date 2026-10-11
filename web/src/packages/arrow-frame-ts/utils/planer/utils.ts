@@ -1,10 +1,10 @@
 import type { Table } from "apache-arrow";
 import { Column } from "../../column";
-import type { Value } from "../../types";
+import type { OperationContext, Value } from "../../types";
 import { LazyCache } from "../cache/lazy-cache";
 
 export function createCacheFromTable(table: Table) {
-  const cache = new LazyCache<string, Column<Value>>();
+  const cache = new LazyCache<string, Column<Value>, OperationContext>();
 
   for (const { name } of table.schema.fields) {
     cache.defer(name, {
@@ -17,9 +17,9 @@ export function createCacheFromTable(table: Table) {
 
 export function createCacheByIds(
   ids: readonly string[],
-  cache: LazyCache<string, Column<Value>>,
-): LazyCache<string, Column<Value>> {
-  const newCache = new LazyCache<string, Column<Value>>();
+  cache: LazyCache<string, Column<Value>, OperationContext>,
+): LazyCache<string, Column<Value>, OperationContext> {
+  const newCache = new LazyCache<string, Column<Value>, OperationContext>();
 
   for (const id of ids) {
     const copy = cache.copyEntry(id);
@@ -33,9 +33,9 @@ export function createCacheByIds(
 }
 
 export function cloneCache(
-  cache: LazyCache<string, Column<Value>>,
-): LazyCache<string, Column<Value>> {
-  const newCache = new LazyCache<string, Column<Value>>();
+  cache: LazyCache<string, Column<Value>, OperationContext>,
+): LazyCache<string, Column<Value>, OperationContext> {
+  const newCache = new LazyCache<string, Column<Value>, OperationContext>();
 
   for (const key of cache.keys()) {
     newCache.addEntry(key, cache.copyEntry(key)!);

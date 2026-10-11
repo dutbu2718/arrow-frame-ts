@@ -14,9 +14,17 @@ export type Value =
 export type Schema = Record<string, Value>;
 
 export type SourceLoader<T> = () => T;
-export type CacheLoader = () => LazyCache<string, Column<Value>>;
+export type CacheLoader = () => LazyCache<
+  string,
+  Column<Value>,
+  OperationContext
+>;
 
 export type RuntimeRow = Record<string, Value>;
+
+export interface OperationContext {
+  readonly get: (columnId: string) => Column<Value>;
+}
 
 export interface BaseOperation {
   readonly operation: string;
@@ -25,7 +33,7 @@ export interface BaseOperation {
 export interface DeriveOperation extends BaseOperation {
   readonly operation: "derive";
   readonly id: string;
-  readonly compute: Thunk<string, Column<Value>>;
+  readonly compute: Thunk<Column<Value>, OperationContext>;
 }
 
 export interface FilterOperation extends BaseOperation {

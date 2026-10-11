@@ -1,8 +1,8 @@
 import type { Column } from "../../column";
-import type { Value } from "../../types";
+import type { OperationContext, Value } from "../../types";
 import type { LazyCache } from "../cache/lazy-cache";
 
 export interface Frame<T> {
   readonly value: T;
-  readonly cache: LazyCache<string, Column<Value>>;
+  readonly cache: LazyCache<string, Column<Value>, OperationContext>;
 }
