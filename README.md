@@ -25,3 +25,17 @@ Fetching columnar data from a backend and using it in the browser for data analy
 <kbd>
 Things get more interesting when the frontend needs to create new columns from existing data, without creating them upfront, and avoiding recalculations when the component states they depend on haven't changed.
 </kbd>
+
+### Open questions
+
+#### Caching and memorization
+
+<kbd>What should the cache store, and how should deferred computations be evaluated?</kbd>
+
+#### Reactivity and invalidation
+
+<kbd>How can external reactive values, like Vue refs, tell the frame that a computation has changed?</kbd>
+
+#### Dependency tracking
+
+<kbd>How should the frame know which columns and external reactive values a computation depends on?</kbd>
