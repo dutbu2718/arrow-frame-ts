@@ -5,9 +5,13 @@ import type {
   Operation,
   SelectOperation,
   SourceLoader,
+  Value,
 } from "./types";
 import { Planer } from "./utils/planer/planer";
 import type { Frame } from "./utils/planer/types";
+import type { Column } from "./column";
+import { LazyCache } from "./utils/cache/lazy-cache";
+import { Graph } from "./utils/graph/graph";
 
 /**
  * @description
@@ -17,26 +21,20 @@ export class DataFrame {
   constructor(
     private readonly program: Operation[],
     private readonly source: SourceLoader<Table>,
-    private readonly cache: CacheLoader | undefined,
+    private readonly cache: LazyCache<string, Column<Value>>,
+    private readonly graph: Graph,
   ) {}
 
   static from(source: SourceLoader<Table>) {
-    return new DataFrame([], source, undefined);
+    return new DataFrame([], source, new LazyCache(), new Graph());
   }
 
-  static fromFrame(frame: () => Frame<Table>) {
-    return new DataFrame(
-      [],
-      () => frame().value,
-      () => frame().cache,
-    );
-  }
-
-  derive(option: Pick<DeriveOperation, "id" | "compute">) {
+  derive(option: Pick<DeriveOperation, "id" | "compute" | "deps">) {
     return this.append({
       operation: "derive",
       id: option.id,
       compute: option.compute,
+      deps: option.deps,
     } satisfies DeriveOperation);
   }
 
@@ -48,10 +46,20 @@ export class DataFrame {
   }
 
   collect(): Frame<Table> {
-    return new Planer().execute(this.program, this.source, this.cache);
+    return new Planer().execute(
+      this.program,
+      this.source,
+      this.cache,
+      this.graph,
+    );
   }
 
   private append(operation: Operation) {
-    return new DataFrame([...this.program, operation], this.source, this.cache);
+    return new DataFrame(
+      [...this.program, operation],
+      this.source,
+      this.cache,
+      this.graph,
+    );
   }
 }

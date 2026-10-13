@@ -3,13 +3,7 @@ import type { LazyCache } from "./utils/cache/lazy-cache";
 import type { Thunk } from "./utils/cache/types";
 
 export type Value =
-  | string
-  | number
-  | bigint
-  | boolean
-  | Date
-  | Uint8Array
-  | undefined;
+  string | number | bigint | boolean | Date | Uint8Array | undefined;
 
 export type Schema = Record<string, Value>;
 
@@ -30,6 +24,7 @@ export interface DeriveOperation extends BaseOperation {
   readonly operation: "derive";
   readonly id: string;
   readonly compute: Thunk<Column<Value>, OperationContext>;
+  readonly deps?: string[];
 }
 
 export interface FilterOperation extends BaseOperation {

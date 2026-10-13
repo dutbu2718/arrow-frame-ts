@@ -29,6 +29,7 @@ export interface CacheMemoizer<K, V> {
     },
   ): void;
   evaluate<C>(key: K, context: C): V;
+  invalidate(key: K): void;
 }
 
 export interface Cache<K, V> extends CacheAccessor<K, V>, CacheMemoizer<K, V> {

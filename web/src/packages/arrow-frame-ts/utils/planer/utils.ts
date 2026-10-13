@@ -2,11 +2,16 @@ import type { Table } from "apache-arrow";
 import { Column } from "../../column";
 import type { Value } from "../../types";
 import { LazyCache } from "../cache/lazy-cache";
+import type { Graph } from "../graph/graph";
 
-export function createCacheFromTable(table: Table) {
-  const cache = new LazyCache<string, Column<Value>>();
-
+export function initializeTableColumns(
+  table: Table,
+  cache: LazyCache<string, Column<Value>>,
+  graph: Graph,
+) {
   for (const { name } of table.schema.fields) {
+    graph.add(name);
+
     cache.defer(name, {
       thunk: () => Column.from<Value>(table.getChild(name)!),
     });

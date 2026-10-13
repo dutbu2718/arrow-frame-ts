@@ -12,6 +12,27 @@ import {
  */
 export class LazyCache<K, V> implements Cache<K, V> {
   private readonly entries = new Map<K, CacheEntry<V>>();
+  private initialized = false;
+
+  get isInitialized() {
+    return this.initialized;
+  }
+
+  initialize(entries: Iterable<[K, V]>) {
+    if (this.initialized) {
+      return;
+    }
+
+    for (const [key, value] of entries) {
+      this.entries.set(key, {
+        status: CacheEntryStatus.Memorized,
+        value,
+        valueCreatedAt: Date.now(),
+      });
+    }
+
+    this.initialized = true;
+  }
 
   get(key: K) {
     const entry = this.entries.get(key);
@@ -52,7 +73,7 @@ export class LazyCache<K, V> implements Cache<K, V> {
     },
   ): void {
     if (this.entries.has(key)) {
-      throw new Error(`"${String(key)}" already exists`);
+      return;
     }
 
     this.entries.set(key, {
@@ -83,6 +104,16 @@ export class LazyCache<K, V> implements Cache<K, V> {
     return entry.value;
   }
 
+  invalidate(key: K): void {
+    const entry = this.entries.get(key);
+
+    if (!entry) {
+      return;
+    }
+
+    entry.status = CacheEntryStatus.Pending;
+  }
+
   copyEntry(key: K): CacheEntry<V> | undefined {
     const entry = this.entries.get(key);
 
@@ -95,7 +126,7 @@ export class LazyCache<K, V> implements Cache<K, V> {
 
   addEntry(key: K, entry: CacheEntry<V>): void {
     if (this.entries.has(key)) {
-      throw new Error(`"${String(key)}" already exists`);
+      return;
     }
 
     this.entries.set(key, { ...entry });

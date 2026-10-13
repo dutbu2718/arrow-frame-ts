@@ -1,6 +1,5 @@
 import { Table, Vector } from "apache-arrow";
 import type {
-  CacheLoader,
   Operation,
   OperationContext,
   SourceLoader,
@@ -9,8 +8,9 @@ import type {
 import { validateColumnLength } from "../../utils";
 import { LazyCache } from "../cache/lazy-cache";
 import { Column } from "../../column";
-import { cloneCache, createCacheByIds, createCacheFromTable } from "./utils";
+import { initializeTableColumns } from "./utils";
 import type { Frame } from "./types";
+import { Graph } from "../graph/graph";
 
 /**
  * @description
@@ -23,42 +23,53 @@ export class Planer {
   execute(
     program: readonly Operation[],
     source: SourceLoader<Table>,
-    cache: CacheLoader | undefined,
+    cache: LazyCache<string, Column<Value>>,
+    graph: Graph,
   ): Frame<Table> {
-    const _source = source();
+    const table = source();
 
-    // Clone so we never mutates the parent's cache
-    const _cache = cache ? cloneCache(cache()) : createCacheFromTable(_source);
-    this.sourceRows = _source.numRows;
+    if (!cache.isInitialized) {
+      initializeTableColumns(table, cache, graph);
+    }
 
-    this.buildPlan(program, _cache);
+    this.sourceRows = table.numRows;
+
+    this.buildPlan(program, cache, graph);
 
     const output: Record<string, Vector> = {};
-    const ids = this.selections ?? Array.from(_cache.keys());
+    const ids = this.selections ?? Array.from(cache.keys());
 
     const context: OperationContext = {
       col: (key) => {
-        return _cache.get(key);
+        return cache.get(key);
       },
     } as const;
 
     for (const id of ids) {
-      output[id] = _cache.evaluate(id, context).vector;
+      output[id] = cache.evaluate(id, context).vector;
     }
 
     return {
       value: new Table(output),
-      cache: createCacheByIds(ids, _cache),
+      cache: cache,
+      graph: graph,
     };
   }
 
   private buildPlan(
     program: readonly Operation[],
     cache: LazyCache<string, Column<Value>>,
+    graph: Graph,
   ) {
     for (const operation of program) {
       switch (operation.operation) {
         case "derive":
+          graph.add(operation.id);
+
+          for (const columnId of operation.deps ?? []) {
+            graph.connect(operation.id, columnId);
+          }
+
           cache.defer(operation.id, {
             thunk: operation.compute,
             validate: (column) => {
