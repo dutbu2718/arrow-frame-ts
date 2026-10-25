@@ -45,20 +45,26 @@ function loadData() {
 
 const source = loadData();
 
+const multiplier = ref(1);
+
 const base = DataFrame.from(VUE_RUNTIME, fromArrow<OriginalData>(source))
   .derive("kpi", (c) => {
+    console.count("[derive] kpi");
+
     const energy = c.energy().data.toArray();
     const atemp = c.atemp().data.toArray();
 
     const kpi = new Float64Array(energy.length);
 
     for (let i = 0; i < kpi.length; i++) {
-      kpi[i] = Math.round(energy[i] / atemp[i]);
+      kpi[i] = Math.round((energy[i] / atemp[i]) * multiplier.value);
     }
 
     return { data: vectorFromArray(kpi) };
   })
   .derive("r12", (c) => {
+    console.count("[derive] r12");
+
     const kpi = c.kpi().data.toArray();
 
     const n = kpi.length;
@@ -76,6 +82,8 @@ const base = DataFrame.from(VUE_RUNTIME, fromArrow<OriginalData>(source))
 
 const selectA = base
   .derive("kpiTrend", (c) => {
+    console.count("[derive] kpiTrend");
+
     const kpi = c.kpi().data.toArray();
     const out = kpi.slice();
 
@@ -159,4 +167,9 @@ async function run({ id, run }: RunOptions) {
   <p v-if="lastResult">
     Last run: {{ lastRun }} · {{ rowCount.toLocaleString() }} rows
   </p>
+
+  <label>
+    Multiplier
+    <input v-model.number="multiplier" type="number" step="1" />
+  </label>
 </template>
