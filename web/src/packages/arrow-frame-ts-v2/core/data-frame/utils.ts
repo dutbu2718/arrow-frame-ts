@@ -1,12 +1,15 @@
 import type { SignalAdapter } from "../reactivity";
-import type { Columns, DeriveFn } from "./types";
+import type { ColumnData, ColumnMap, Columns, DeriveFn } from "./types";
 
-export function createDerive<T>(
+export function createDerive<
+  TColumns extends ColumnMap,
+  TResult extends ColumnData,
+>(
   sig: SignalAdapter,
-  columns: Columns,
-  fn: DeriveFn<T>,
+  columns: Columns<TColumns>,
+  fn: DeriveFn<TColumns, TResult>,
 ) {
-  return sig.memo<T>((previous, onCleanup) =>
+  return sig.memo<TResult>((previous, onCleanup) =>
     fn(columns, { previous, onCleanup }),
   );
 }

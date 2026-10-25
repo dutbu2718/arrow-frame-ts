@@ -1,8 +1,10 @@
-import type { Table } from "apache-arrow";
-import type { ColumnarData } from "../core/data-frame";
+import type { Table, Vector } from "apache-arrow";
+import type { ColumnData } from "../core/data-frame/types";
 
-export function fromArrow(table: Table): ColumnarData {
-  const columns: ColumnarData = {};
+export function fromArrow<T extends Record<string, ColumnData<Vector>>>(
+  table: Table,
+): T {
+  const columns: Record<string, ColumnData<Vector>> = {};
 
   for (const field of table.schema.fields) {
     const vector = table.getChild(field.name);
@@ -11,8 +13,8 @@ export function fromArrow(table: Table): ColumnarData {
       throw new Error(`Column "${field.name}" not found`);
     }
 
-    columns[field.name] = vector;
+    columns[field.name] = { data: vector };
   }
 
-  return columns;
+  return columns as T;
 }

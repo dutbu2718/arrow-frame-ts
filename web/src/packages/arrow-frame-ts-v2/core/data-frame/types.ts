@@ -1,17 +1,19 @@
 import type { Getter, MaybePromise, OnCleanup } from "../reactivity";
 
-export type ColumnarData = Record<string, ColumnData>;
-export type Columns = Record<string, Getter<MaybePromise<unknown>>>;
+export interface ColumnData<T = unknown> {
+  readonly data: T;
+}
 
-export type DeriveFn<T> = (
-  columns: Columns,
+export type ColumnMap = Record<string, ColumnData>;
+
+export type Columns<T extends ColumnMap> = {
+  [K in keyof T]: Getter<T[K]>;
+};
+
+export type DeriveFn<TColumns extends ColumnMap, TResult extends ColumnData> = (
+  columns: Columns<TColumns>,
   options: {
-    previous: T | undefined;
+    previous: TResult | undefined;
     onCleanup: OnCleanup;
   },
-) => MaybePromise<T>;
-
-export interface ColumnData<T = unknown> {
-  readonly length: number;
-  get(index: number): T | null | undefined;
-}
+) => MaybePromise<TResult>;

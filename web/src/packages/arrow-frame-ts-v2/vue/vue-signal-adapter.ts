@@ -8,7 +8,7 @@ import type {
   SignalAdapter,
 } from "../core/reactivity";
 
-export const VUE_SIGNAL_ADAPTER: SignalAdapter = {
+export const VUE_RUNTIME: SignalAdapter = {
   signal: function <T>(initial: T): { get: Getter<T>; set: Setter<T> } {
     const ref = shallowRef(initial);
 

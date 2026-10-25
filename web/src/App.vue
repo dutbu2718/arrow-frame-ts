@@ -1,11 +1,17 @@
 <script setup lang="ts">
-import { Table, tableFromArrays, vectorFromArray } from "apache-arrow";
-import { Column } from "./packages/arrow-frame-ts/column.ts";
-import { DataFrame } from "./packages/arrow-frame-ts/data-frame.ts";
-import type { Value } from "./packages/arrow-frame-ts/types.ts";
-import { computed, onMounted, ref, shallowReactive } from "vue";
-import type { Frame } from "./packages/arrow-frame-ts/utils/planer/types.ts";
-import ArrowFrameGraphViewer from "./components/arrow-frame-graph-viewer/ArrowFrameGraphViewer.vue";
+import {
+  Float64,
+  tableFromArrays,
+  Vector,
+  vectorFromArray,
+} from "apache-arrow";
+import { computed, ref } from "vue";
+import {
+  DataFrame,
+  type ColumnData,
+} from "./packages/arrow-frame-ts-v2/core/data-frame/index.ts";
+import { VUE_RUNTIME } from "./packages/arrow-frame-ts-v2/vue/index.ts";
+import { fromArrow } from "./packages/arrow-frame-ts-v2/arrow/arrow-utils.ts";
 
 enum FrameId {
   All = "All",
@@ -15,90 +21,18 @@ enum FrameId {
 
 interface RunOptions {
   id: FrameId;
-  run: () => Frame<Table>;
+  run: () => Promise<Record<string, Vector>>;
 }
 
-const N = 1000000;
+type OriginalData = {
+  energy: ColumnData<Vector<Float64>>;
+  atemp: ColumnData<Vector<Float64>>;
+};
+
+const N = 1_000_000;
 const P = 35;
 
-const source = loadArrow();
-
-const results = shallowReactive(new Map<string, Frame<Table>>());
-
-const lastRun = ref<FrameId>(FrameId.All);
-
-const lastResult = computed(() => results.get(lastRun.value));
-
-const base = computed(() => {
-  return DataFrame.from(() => source)
-    .derive({
-      id: "kpi",
-      compute: (c) => {
-        const energy = c.col("energy").values as Float64Array;
-        const atemp = c.col("atemp").values as Float64Array;
-
-        const kpi = new Float64Array(energy.length);
-
-        for (let i = 0; i < kpi.length; i++) {
-          kpi[i] = Math.round(energy[i] / atemp[i]);
-        }
-
-        return Column.from<Value>(vectorFromArray(kpi));
-      },
-      deps: ["energy", "atemp"],
-    })
-    .derive({
-      id: "r12",
-      compute: (c) => {
-        const kpi = c.col("kpi").values as Float64Array;
-
-        const n = kpi.length;
-        const r12 = new Float64Array(n);
-
-        let sum = 0;
-        for (let i = 0; i < n; i++) {
-          sum += kpi[i];
-          if (i >= 12) sum -= kpi[i - 12];
-          if (i >= 11) r12[i] = sum;
-        }
-
-        return Column.from<Value>(vectorFromArray(r12));
-      },
-      deps: ["kpi"],
-    })
-    .select();
-});
-
-const selectA = computed(() => {
-  return base.value
-    .derive({
-      id: "kpiTrend",
-      compute: (c) => {
-        const kpi = c.col("kpi").values as Float64Array;
-        const out = kpi.slice();
-
-        return Column.from<Value>(vectorFromArray(out));
-      },
-      deps: ["kpi"],
-    })
-    .select(["kpi", "kpiTrend"]);
-});
-
-const selectB = computed(() => {
-  return base.value.select(["r12"]);
-});
-
-const OPTIONS: RunOptions[] = [
-  { id: FrameId.All, run: () => base.value!.collect() },
-  { id: FrameId.Kpi, run: () => selectA.value!.collect() },
-  { id: FrameId.R12, run: () => selectB.value!.collect() },
-];
-
-onMounted(() => {
-  run(OPTIONS[0]);
-});
-
-function loadArrow() {
+function loadData() {
   return tableFromArrays({
     energy: Float64Array.from({ length: N }, () =>
       Math.round(100 + Math.random() * 400),
@@ -109,22 +43,111 @@ function loadArrow() {
   });
 }
 
-function run({ id, run }: RunOptions) {
+const source = loadData();
+
+const base = DataFrame.from(VUE_RUNTIME, fromArrow<OriginalData>(source))
+  .derive("kpi", (c) => {
+    const energy = c.energy().data.toArray();
+    const atemp = c.atemp().data.toArray();
+
+    const kpi = new Float64Array(energy.length);
+
+    for (let i = 0; i < kpi.length; i++) {
+      kpi[i] = Math.round(energy[i] / atemp[i]);
+    }
+
+    return { data: vectorFromArray(kpi) };
+  })
+  .derive("r12", (c) => {
+    const kpi = c.kpi().data.toArray();
+
+    const n = kpi.length;
+    const r12 = new Float64Array(n);
+
+    let sum = 0;
+    for (let i = 0; i < n; i++) {
+      sum += kpi[i];
+      if (i >= 12) sum -= kpi[i - 12];
+      if (i >= 11) r12[i] = sum;
+    }
+
+    return { data: vectorFromArray(r12) };
+  });
+
+const selectA = base
+  .derive("kpiTrend", (c) => {
+    const kpi = c.kpi().data.toArray();
+    const out = kpi.slice();
+
+    return { data: vectorFromArray(out) };
+  })
+  .select("kpi", "kpiTrend");
+
+const selectB = base.select("r12");
+
+const OPTIONS: RunOptions[] = [
+  {
+    id: FrameId.All,
+    run: () => readColumns(base.select("energy", "atemp", "kpi", "r12")),
+  },
+  {
+    id: FrameId.Kpi,
+    run: () => readColumns(selectA),
+  },
+  {
+    id: FrameId.R12,
+    run: () => readColumns(selectB),
+  },
+];
+
+const lastRun = ref<FrameId>(FrameId.All);
+const lastResult = ref<Record<string, unknown>>();
+
+const rowCount = computed(() => {
+  const first = Object.values(lastResult.value ?? {})[0];
+  return first && typeof first === "object" && "length" in first
+    ? Number(first.length)
+    : 0;
+});
+
+async function readColumns(
+  columns: Record<string, () => ColumnData<Vector>>,
+): Promise<Record<string, Vector>> {
+  const entries = await Promise.all(
+    Object.entries(columns).map(async ([id, getter]) => {
+      const column = await getter();
+      return [id, column.data] as const;
+    }),
+  );
+
+  return Object.fromEntries(entries);
+}
+
+async function run({ id, run }: RunOptions) {
   lastRun.value = id;
 
   const t0 = performance.now();
-  const frame = run();
+  const data = await run();
   const ms = (performance.now() - t0).toFixed(1);
 
-  console.log(`[${id}] ${frame.value.numRows} rows in ${ms} ms`);
-  console.table(
-    frame.value
-      .slice(Math.max(0, frame.value.numRows - P), frame.value.numRows)
-      .toArray()
-      .map((row) => row.toJSON()),
-  );
+  lastResult.value = data;
 
-  results.set(id, frame);
+  const first = Object.values(data)[0];
+  const length = first?.length ?? 0;
+  const count = Math.min(P, length);
+  const start = length - count;
+
+  console.log(`[${id}] ${length} rows in ${ms} ms`);
+
+  console.table(
+    Array.from({ length: count }, (_, offset) => {
+      const index = start + offset;
+
+      return Object.fromEntries(
+        Object.entries(data).map(([key, vector]) => [key, vector.get(index)]),
+      );
+    }),
+  );
 }
 </script>
 
@@ -133,8 +156,7 @@ function run({ id, run }: RunOptions) {
     Run: {{ option.id }}
   </button>
 
-  <ArrowFrameGraphViewer
-    v-if="lastResult"
-    :nodes="[...lastResult.graph.nodes.values()]"
-  />
+  <p v-if="lastResult">
+    Last run: {{ lastRun }} · {{ rowCount.toLocaleString() }} rows
+  </p>
 </template>

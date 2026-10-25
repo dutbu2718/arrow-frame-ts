@@ -1,44 +1,49 @@
 import type { SignalAdapter } from "../reactivity";
-import type { Columns, ColumnarData, DeriveFn } from "./types";
+import type { ColumnData, ColumnMap, Columns, DeriveFn } from "./types";
 import { createDerive } from "./utils";
 
-export class DataFrame {
+export class DataFrame<T extends ColumnMap> {
   private constructor(
-    private readonly sig: SignalAdapter,
-    private readonly columns: Columns,
+    private readonly runtime: SignalAdapter,
+    private readonly columns: Columns<T>,
   ) {}
 
-  static from(sig: SignalAdapter, data: ColumnarData = {}): DataFrame {
-    const columns: Columns = {};
+  static from<T extends ColumnMap>(
+    runtime: SignalAdapter,
+    data: T,
+  ): DataFrame<T> {
+    const columns = Object.fromEntries(
+      Object.entries(data).map(([id, column]) => [id, () => column]),
+    ) as Columns<T>;
 
-    for (const [id, values] of Object.entries(data)) {
-      if (id in columns) {
-        throw new Error(`Column "${id}" already exists`);
-      }
-
-      columns[id] = () => values;
-    }
-
-    return new DataFrame(sig, {});
+    return new DataFrame(runtime, columns);
   }
 
-  derive<T>(id: string, fn: DeriveFn<T>) {
+  derive<K extends string, R extends ColumnData>(
+    id: K,
+    fn: DeriveFn<T, R>,
+  ): DataFrame<T & Record<K, R>> {
     if (id in this.columns) {
       throw new Error(`Column "${id}" already exists`);
     }
 
-    const column = createDerive(this.sig, this.columns, fn);
+    const column = createDerive(this.runtime, this.columns, fn);
 
-    return new DataFrame(this.sig, {
+    return new DataFrame(this.runtime, {
       ...this.columns,
       [id]: column,
-    });
+    } as Columns<T & Record<K, R>>);
   }
 
-  select<K extends keyof Columns>(...ids: K[]): Pick<Columns, K> {
-    return Object.fromEntries(ids.map((id) => [id, this.columns[id]])) as Pick<
-      Columns,
-      K
-    >;
+  select<K extends keyof T>(...ids: K[]): Pick<Columns<T>, K> {
+    return Object.fromEntries(
+      ids.map((id) => {
+        if (!(id in this.columns)) {
+          throw new Error(`Unknown column "${String(id)}"`);
+        }
+
+        return [id, this.columns[id]];
+      }),
+    ) as Pick<Columns<T>, K>;
   }
 }
