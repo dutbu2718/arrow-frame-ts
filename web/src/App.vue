@@ -9,9 +9,9 @@ import { computed, ref } from "vue";
 import {
   DataFrame,
   type ColumnData,
-} from "./packages/arrow-frame-ts-v2/core/data-frame/index.ts";
-import { VUE_RUNTIME } from "./packages/arrow-frame-ts-v2/vue/index.ts";
-import { fromArrow } from "./packages/arrow-frame-ts-v2/arrow/arrow-utils.ts";
+} from "./packages/arrow-frame-ts/core/data-frame/index.ts";
+import { VUE_RUNTIME } from "./packages/arrow-frame-ts/vue/index.ts";
+import { fromArrow } from "./packages/arrow-frame-ts/arrow/arrow-utils.ts";
 
 enum FrameId {
   All = "All",
