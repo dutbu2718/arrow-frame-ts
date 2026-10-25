@@ -6,7 +6,7 @@ import type {
   OnCleanup,
   Setter,
   SignalAdapter,
-} from "../core/adapters";
+} from "../core/reactivity";
 
 export const VUE_SIGNAL_ADAPTER: SignalAdapter = {
   signal: function <T>(initial: T): { get: Getter<T>; set: Setter<T> } {
