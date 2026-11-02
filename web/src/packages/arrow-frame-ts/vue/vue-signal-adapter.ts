@@ -20,6 +20,10 @@ export const VUE_RUNTIME: SignalAdapter = {
     return () => value.value;
   },
 
+  effect: function (fn: (onCleanup: OnCleanup) => void): () => void {
+    return () => {};
+  },
+
   memo<T>(
     fn: (previous: T | undefined, onCleanup: OnCleanup) => MaybePromise<T>,
   ): Getter<MaybePromise<T>> {
