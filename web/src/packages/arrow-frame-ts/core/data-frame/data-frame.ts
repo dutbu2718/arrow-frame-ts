@@ -8,10 +8,7 @@ export class DataFrame<T extends ColumnMap> {
     private readonly columns: Columns<T>,
   ) {}
 
-  static from<T extends ColumnMap>(
-    runtime: SignalAdapter,
-    data: T,
-  ): DataFrame<T> {
+  static from<T extends ColumnMap>(runtime: SignalAdapter, data: T): DataFrame<T> {
     const columns = Object.fromEntries(
       Object.entries(data).map(([id, column]) => [id, () => column]),
     ) as Columns<T>;

@@ -1,9 +1,7 @@
 import type { Table, Vector } from "apache-arrow";
 import type { ColumnData } from "../core/data-frame/types";
 
-export function fromArrow<T extends Record<string, ColumnData<Vector>>>(
-  table: Table,
-): T {
+export function fromArrow<T extends Record<string, ColumnData<Vector>>>(table: Table): T {
   const columns: Record<string, ColumnData<Vector>> = {};
 
   for (const field of table.schema.fields) {

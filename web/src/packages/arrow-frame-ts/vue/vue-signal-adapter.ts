@@ -1,12 +1,6 @@
 import { shallowRef, computed as vueComputed } from "vue";
 import { pauseTracking, resetTracking } from "@vue/reactivity";
-import type {
-  Getter,
-  MaybePromise,
-  OnCleanup,
-  Setter,
-  SignalAdapter,
-} from "../core/reactivity";
+import type { Getter, MaybePromise, OnCleanup, Setter, SignalAdapter } from "../core/reactivity";
 
 export const VUE_RUNTIME: SignalAdapter = {
   signal: function <T>(initial: T): { get: Getter<T>; set: Setter<T> } {

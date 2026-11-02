@@ -1,15 +1,7 @@
 <script setup lang="ts">
-import {
-  Float64,
-  tableFromArrays,
-  Vector,
-  vectorFromArray,
-} from "apache-arrow";
+import { Float64, tableFromArrays, Vector, vectorFromArray } from "apache-arrow";
 import { computed, ref } from "vue";
-import {
-  DataFrame,
-  type ColumnData,
-} from "./packages/arrow-frame-ts/core/data-frame/index.ts";
+import { DataFrame, type ColumnData } from "./packages/arrow-frame-ts/core/data-frame/index.ts";
 import { VUE_RUNTIME } from "./packages/arrow-frame-ts/vue/index.ts";
 import { fromArrow } from "./packages/arrow-frame-ts/arrow/arrow-utils.ts";
 
@@ -34,12 +26,8 @@ const P = 35;
 
 function loadData() {
   return tableFromArrays({
-    energy: Float64Array.from({ length: N }, () =>
-      Math.round(100 + Math.random() * 400),
-    ),
-    atemp: Float64Array.from({ length: N }, () =>
-      Math.round(5 + Math.random() * 30),
-    ),
+    energy: Float64Array.from({ length: N }, () => Math.round(100 + Math.random() * 400)),
+    atemp: Float64Array.from({ length: N }, () => Math.round(5 + Math.random() * 30)),
   });
 }
 
@@ -113,9 +101,7 @@ const lastResult = ref<Record<string, unknown>>();
 
 const rowCount = computed(() => {
   const first = Object.values(lastResult.value ?? {})[0];
-  return first && typeof first === "object" && "length" in first
-    ? Number(first.length)
-    : 0;
+  return first && typeof first === "object" && "length" in first ? Number(first.length) : 0;
 });
 
 async function readColumns(
@@ -164,9 +150,7 @@ async function run({ id, run }: RunOptions) {
     Run: {{ option.id }}
   </button>
 
-  <p v-if="lastResult">
-    Last run: {{ lastRun }} · {{ rowCount.toLocaleString() }} rows
-  </p>
+  <p v-if="lastResult">Last run: {{ lastRun }} · {{ rowCount.toLocaleString() }} rows</p>
 
   <label>
     Multiplier
