@@ -13,9 +13,11 @@ export interface SignalAdapter {
 
   computed<T>(fn: () => T): Getter<T>;
 
+  effect(fn: (onCleanup: OnCleanup) => void): () => void;
+
+  untrack<T>(fn: () => T): T;
+
   memo<T>(
     fn: (previous: T | undefined, onCleanup: OnCleanup) => MaybePromise<T>,
   ): Getter<MaybePromise<T>>;
-
-  untrack<T>(fn: () => T): T;
 }
