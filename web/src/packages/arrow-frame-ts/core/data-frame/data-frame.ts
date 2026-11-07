@@ -1,4 +1,4 @@
-import type { SignalAdapter } from "../reactivity";
+import { createSnapshot, type SignalAdapter } from "../reactivity";
 import type { ColumnData, ColumnMap, Columns, DeriveFn } from "./types";
 import { createDerive } from "./utils";
 
@@ -10,8 +10,11 @@ export class DataFrame<T extends ColumnMap> {
 
   static from<T extends ColumnMap>(runtime: SignalAdapter, data: T): DataFrame<T> {
     const columns = Object.fromEntries(
-      Object.entries(data).map(([id, column]) => [id, () => column]),
-    ) as Columns<T>;
+      Object.entries(data).map(([id, column]) => {
+        const snapshot = createSnapshot(column, undefined, "fulfilled");
+        return [id, () => snapshot];
+      }),
+    ) as unknown as Columns<T>;
 
     return new DataFrame(runtime, columns);
   }
@@ -26,10 +29,9 @@ export class DataFrame<T extends ColumnMap> {
 
     const column = createDerive(this.runtime, this.columns, fn);
 
-    return new DataFrame(this.runtime, {
-      ...this.columns,
-      [id]: column,
-    } as Columns<T & Record<K, R>>);
+    const columns = { ...this.columns, [id]: column } as unknown as Columns<T & Record<K, R>>;
+
+    return new DataFrame(this.runtime, columns);
   }
 
   select<K extends keyof T>(...ids: K[]): Pick<Columns<T>, K> {

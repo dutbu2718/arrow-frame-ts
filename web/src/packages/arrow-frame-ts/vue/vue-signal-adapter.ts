@@ -4,7 +4,7 @@ import type { Getter, MaybePromise, OnCleanup, Setter, SignalAdapter } from "../
 import type { ErrorLike, ReactivePromise } from "../core/reactivity/reactive-promise/types";
 import { createMemo } from "../core/reactivity/utils/create-memo";
 
-export const VUE_RUNTIME: SignalAdapter = {
+export const VUE_SIGNAL_ADAPTER: SignalAdapter = {
   signal: function <T>(initial: T): { get: Getter<T>; set: Setter<T> } {
     const ref = shallowRef(initial);
 
@@ -29,7 +29,7 @@ export const VUE_RUNTIME: SignalAdapter = {
   memo<T, E extends ErrorLike = ErrorLike>(
     fn: (previous: T | undefined, onCleanup: OnCleanup) => MaybePromise<T>,
   ): Getter<ReactivePromise<T, E>> {
-    return createMemo<T, E>(VUE_RUNTIME, fn);
+    return createMemo<T, E>(VUE_SIGNAL_ADAPTER, fn);
   },
 
   untrack: function <T>(fn: () => T): T {

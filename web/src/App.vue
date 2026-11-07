@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { Float64, tableFromArrays, Vector, vectorFromArray } from "apache-arrow";
 import { computed, ref } from "vue";
-import { DataFrame, type ColumnData } from "./packages/arrow-frame-ts/core/data-frame/index.ts";
-import { VUE_RUNTIME } from "./packages/arrow-frame-ts/vue/index.ts";
+import {
+  DataFrame,
+  type Column,
+  type ColumnData,
+} from "./packages/arrow-frame-ts/core/data-frame/index.ts";
+import { VUE_SIGNAL_ADAPTER } from "./packages/arrow-frame-ts/vue/index.ts";
 import { fromArrow } from "./packages/arrow-frame-ts/arrow/arrow-utils.ts";
 
 enum FrameId {
@@ -13,7 +17,7 @@ enum FrameId {
 
 interface RunOptions {
   id: FrameId;
-  run: () => Promise<Record<string, Vector>>;
+  run: () => Record<string, Vector>;
 }
 
 type OriginalData = {
@@ -35,12 +39,12 @@ const source = loadData();
 
 const multiplier = ref(1);
 
-const base = DataFrame.from(VUE_RUNTIME, fromArrow<OriginalData>(source))
+const base = DataFrame.from(VUE_SIGNAL_ADAPTER, fromArrow<OriginalData>(source))
   .derive("kpi", (c) => {
     console.count("[derive] kpi");
 
-    const energy = c.energy().data.toArray();
-    const atemp = c.atemp().data.toArray();
+    const energy = c.energy().valueOrThrow()!.data.toArray();
+    const atemp = c.atemp().valueOrThrow()!.data.toArray();
 
     const kpi = new Float64Array(energy.length);
 
@@ -53,7 +57,7 @@ const base = DataFrame.from(VUE_RUNTIME, fromArrow<OriginalData>(source))
   .derive("r12", (c) => {
     console.count("[derive] r12");
 
-    const kpi = c.kpi().data.toArray();
+    const kpi = c.kpi().valueOrThrow()!.data.toArray();
 
     const n = kpi.length;
     const r12 = new Float64Array(n);
@@ -72,7 +76,7 @@ const selectA = base
   .derive("kpiTrend", (c) => {
     console.count("[derive] kpiTrend");
 
-    const kpi = c.kpi().data.toArray();
+    const kpi = c.kpi().valueOrThrow()!.data.toArray();
     const out = kpi.slice();
 
     return { data: vectorFromArray(out) };
@@ -104,17 +108,10 @@ const rowCount = computed(() => {
   return first && typeof first === "object" && "length" in first ? Number(first.length) : 0;
 });
 
-async function readColumns(
-  columns: Record<string, () => ColumnData<Vector>>,
-): Promise<Record<string, Vector>> {
-  const entries = await Promise.all(
-    Object.entries(columns).map(async ([id, getter]) => {
-      const column = await getter();
-      return [id, column.data] as const;
-    }),
+function readColumns(columns: Record<string, Column<ColumnData<Vector>>>): Record<string, Vector> {
+  return Object.fromEntries(
+    Object.entries(columns).map(([id, getter]) => [id, getter().valueOrThrow()!.data]),
   );
-
-  return Object.fromEntries(entries);
 }
 
 async function run({ id, run }: RunOptions) {
