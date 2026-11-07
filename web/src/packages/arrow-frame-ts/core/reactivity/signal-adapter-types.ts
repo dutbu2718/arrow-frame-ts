@@ -19,7 +19,7 @@ export interface SignalAdapter {
 
   untrack<T>(fn: () => T): T;
 
-  memo<T, E = ErrorLike>(
+  memo<T, E extends ErrorLike = ErrorLike>(
     fn: (previous: T | undefined, onCleanup: OnCleanup) => MaybePromise<T>,
   ): Getter<ReactivePromise<T, E>>;
 }

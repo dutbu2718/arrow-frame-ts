@@ -1,6 +1,8 @@
-import { shallowRef, computed as vueComputed } from "vue";
+import { shallowRef, computed as vueComputed, watchEffect } from "vue";
 import { pauseTracking, resetTracking } from "@vue/reactivity";
 import type { Getter, MaybePromise, OnCleanup, Setter, SignalAdapter } from "../core/reactivity";
+import type { ErrorLike, ReactivePromise } from "../core/reactivity/reactive-promise/types";
+import { createMemo } from "../core/reactivity/utils/create-memo";
 
 export const VUE_RUNTIME: SignalAdapter = {
   signal: function <T>(initial: T): { get: Getter<T>; set: Setter<T> } {
@@ -20,44 +22,14 @@ export const VUE_RUNTIME: SignalAdapter = {
     return () => value.value;
   },
 
-  effect: function (_fn: (onCleanup: OnCleanup) => void): () => void {
-    return () => {};
+  effect: function (fn: (onCleanup: OnCleanup) => void): () => void {
+    return watchEffect(fn, { flush: "sync" });
   },
 
-  memo<T>(
+  memo<T, E extends ErrorLike = ErrorLike>(
     fn: (previous: T | undefined, onCleanup: OnCleanup) => MaybePromise<T>,
-  ): Getter<MaybePromise<T>> {
-    let previous: T | undefined;
-    let cleanup: (() => void) | undefined;
-
-    // Todo: need to look how solid createMemo handle async signals
-    // How should async functional reactive programming work...
-    let asyncVersion = 0;
-
-    const value = vueComputed<MaybePromise<T>>(() => {
-      cleanup?.();
-      cleanup = undefined;
-
-      const currentAsyncVersion = ++asyncVersion;
-
-      const result = fn(previous, (callback) => {
-        cleanup = callback;
-      });
-
-      if (result instanceof Promise) {
-        result.then((resolved) => {
-          if (currentAsyncVersion === asyncVersion) {
-            previous = resolved;
-          }
-        });
-      } else {
-        previous = result;
-      }
-
-      return result;
-    });
-
-    return () => value.value;
+  ): Getter<ReactivePromise<T, E>> {
+    return createMemo<T, E>(VUE_RUNTIME, fn);
   },
 
   untrack: function <T>(fn: () => T): T {
