@@ -11,7 +11,7 @@ export class DataFrame<T extends ColumnMap> {
   static from<T extends ColumnMap>(runtime: SignalAdapter, data: T): DataFrame<T> {
     const columns = Object.fromEntries(
       Object.entries(data).map(([id, column]) => {
-        const snapshot = createSnapshot(column, undefined, "fulfilled");
+        const snapshot = createSnapshot(column, undefined, "resolved");
         return [id, () => snapshot];
       }),
     ) as unknown as Columns<T>;

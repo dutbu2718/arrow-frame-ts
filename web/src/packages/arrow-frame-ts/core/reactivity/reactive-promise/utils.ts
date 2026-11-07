@@ -9,6 +9,9 @@ export function createSnapshot<T, E>(
     value: value,
     error: error,
     status: status,
+    isPending: status === "pending",
+    isResolved: status === "resolved",
+    isRejected: status === "rejected",
     valueOrThrow: () => {
       if (error !== undefined) {
         throw toThrowable(error);

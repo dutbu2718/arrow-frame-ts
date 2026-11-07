@@ -27,7 +27,7 @@ export function createReactivePromise<T, E extends ErrorLike = ErrorLike>(
     const resolve = (newValue: T) => {
       value = newValue;
       error = undefined;
-      setStatus("fulfilled");
+      setStatus("resolved");
     };
 
     // Keep the last good value on failure

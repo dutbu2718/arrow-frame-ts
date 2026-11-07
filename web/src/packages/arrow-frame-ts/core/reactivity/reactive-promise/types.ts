@@ -5,11 +5,14 @@ export type ErrorLike = {
   [key: string]: any;
 };
 
-export type ReactivePromiseStatus = "pending" | "fulfilled" | "rejected";
+export type ReactivePromiseStatus = "pending" | "resolved" | "rejected";
 
 export interface ReactivePromise<T, E = ErrorLike> {
   value: T | undefined;
   error: E | undefined;
+  isPending: boolean;
+  isResolved: boolean;
+  isRejected: boolean;
   status: ReactivePromiseStatus;
 
   /**
