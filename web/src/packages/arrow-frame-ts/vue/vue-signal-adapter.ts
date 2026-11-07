@@ -20,7 +20,7 @@ export const VUE_RUNTIME: SignalAdapter = {
     return () => value.value;
   },
 
-  effect: function (fn: (onCleanup: OnCleanup) => void): () => void {
+  effect: function (_fn: (onCleanup: OnCleanup) => void): () => void {
     return () => {};
   },
 
