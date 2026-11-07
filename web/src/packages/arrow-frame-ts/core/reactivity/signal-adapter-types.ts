@@ -1,3 +1,5 @@
+import type { ErrorLike, ReactivePromise } from "./reactive-promise/types";
+
 export type MaybePromise<T> = T | Promise<T>;
 
 export type Getter<T> = () => T;
@@ -17,7 +19,7 @@ export interface SignalAdapter {
 
   untrack<T>(fn: () => T): T;
 
-  memo<T>(
+  memo<T, E = ErrorLike>(
     fn: (previous: T | undefined, onCleanup: OnCleanup) => MaybePromise<T>,
-  ): Getter<MaybePromise<T>>;
+  ): Getter<ReactivePromise<T, E>>;
 }
