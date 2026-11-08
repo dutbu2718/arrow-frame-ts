@@ -15,6 +15,10 @@ export interface SignalAdapter {
 
   computed<T>(fn: () => T): Getter<T>;
 
+  /**
+   * @remarks
+   * A lazy effect.
+   */
   effect(fn: (onCleanup: OnCleanup) => void): () => void;
 
   untrack<T>(fn: () => T): T;
