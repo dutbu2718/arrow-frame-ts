@@ -51,7 +51,7 @@ const base = DataFrame.from(VUE_SIGNAL_ADAPTER, fromArrow<OriginalData>(source))
       kpi[i] = Math.round((energy[i] / atemp[i]) * multiplier.value);
     }
 
-    return { data: vectorFromArray(kpi) };
+    return { data: vectorFromArray(kpi) } as ColumnData<Vector<Float64>>;
   })
   .derive("r12", (c) => {
     console.count("[derive] r12");
@@ -67,7 +67,7 @@ const base = DataFrame.from(VUE_SIGNAL_ADAPTER, fromArrow<OriginalData>(source))
       if (i >= 11) r12[i] = sum;
     }
 
-    return { data: vectorFromArray(r12) };
+    return { data: vectorFromArray(r12) } as ColumnData<Vector<Float64>>;
   });
 
 const selectAll = base.select("energy", "atemp", "kpi", "r12");
@@ -78,7 +78,7 @@ const selectKpi = base
 
     const kpi = c.kpi().valueOrThrow()!.data.toArray();
 
-    return { data: vectorFromArray(kpi.slice()) };
+    return { data: vectorFromArray(kpi.slice()) } as ColumnData<Vector<Float64>>;
   })
   .select("kpi", "kpiTrend");
 
@@ -100,7 +100,7 @@ const rowCount = computed(() => {
 
 function readColumns<T extends ColumnMap>(frame: DataFrame<T>): Record<string, Vector> {
   return Object.fromEntries(
-    Object.entries(frame.columns).map(([id, getter]) => [id, getter().valueOrThrow()!.data]),
+    Object.entries(frame.cols).map(([id, getter]) => [id, getter().valueOrThrow()!.data]),
   );
 }
 

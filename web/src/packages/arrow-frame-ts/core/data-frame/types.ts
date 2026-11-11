@@ -19,3 +19,13 @@ export type DeriveFn<TColumns extends ColumnMap, TResult extends ColumnData> = (
     onCleanup: OnCleanup;
   },
 ) => MaybePromise<TResult>;
+
+/**
+ * @description
+ * Flatten the type output to improve type hints shown in editors.
+ *
+ * Function like https://github.com/sindresorhus/type-fest/blob/main/source/simplify.d.ts
+ */
+export type Simplify<T> = {
+  [K in keyof T]: T[K];
+} & {};
