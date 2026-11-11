@@ -3,8 +3,8 @@ import { Float64, tableFromArrays, Vector, vectorFromArray } from "apache-arrow"
 import { computed, ref } from "vue";
 import {
   DataFrame,
-  type Column,
   type ColumnData,
+  type ColumnMap,
 } from "./packages/arrow-frame-ts/core/data-frame/index.ts";
 import { VUE_SIGNAL_ADAPTER } from "./packages/arrow-frame-ts/vue/index.ts";
 import { fromArrow } from "./packages/arrow-frame-ts/arrow/arrow-utils.ts";
@@ -17,7 +17,7 @@ enum FrameId {
 
 interface RunOptions {
   id: FrameId;
-  run: () => Record<string, Vector>;
+  frame: DataFrame<ColumnMap>;
 }
 
 type OriginalData = {
@@ -36,7 +36,6 @@ function loadData() {
 }
 
 const source = loadData();
-
 const multiplier = ref(1);
 
 const base = DataFrame.from(VUE_SIGNAL_ADAPTER, fromArrow<OriginalData>(source))
@@ -59,11 +58,10 @@ const base = DataFrame.from(VUE_SIGNAL_ADAPTER, fromArrow<OriginalData>(source))
 
     const kpi = c.kpi().valueOrThrow()!.data.toArray();
 
-    const n = kpi.length;
-    const r12 = new Float64Array(n);
-
+    const r12 = new Float64Array(kpi.length);
     let sum = 0;
-    for (let i = 0; i < n; i++) {
+
+    for (let i = 0; i < kpi.length; i++) {
       sum += kpi[i];
       if (i >= 12) sum -= kpi[i - 12];
       if (i >= 11) r12[i] = sum;
@@ -72,53 +70,45 @@ const base = DataFrame.from(VUE_SIGNAL_ADAPTER, fromArrow<OriginalData>(source))
     return { data: vectorFromArray(r12) };
   });
 
-const selectA = base
+const selectAll = base.select("energy", "atemp", "kpi", "r12");
+
+const selectKpi = base
   .derive("kpiTrend", (c) => {
     console.count("[derive] kpiTrend");
 
     const kpi = c.kpi().valueOrThrow()!.data.toArray();
-    const out = kpi.slice();
 
-    return { data: vectorFromArray(out) };
+    return { data: vectorFromArray(kpi.slice()) };
   })
   .select("kpi", "kpiTrend");
 
-const selectB = base.select("r12");
+const selectR12 = base.select("r12");
 
 const OPTIONS: RunOptions[] = [
-  {
-    id: FrameId.All,
-    run: () => readColumns(base.select("energy", "atemp", "kpi", "r12")),
-  },
-  {
-    id: FrameId.Kpi,
-    run: () => readColumns(selectA),
-  },
-  {
-    id: FrameId.R12,
-    run: () => readColumns(selectB),
-  },
+  { id: FrameId.All, frame: selectAll },
+  { id: FrameId.Kpi, frame: selectKpi },
+  { id: FrameId.R12, frame: selectR12 },
 ];
 
-const lastRun = ref<FrameId>(FrameId.All);
-const lastResult = ref<Record<string, unknown>>();
+const lastRun = ref<FrameId>();
+const lastResult = ref<Record<string, Vector>>();
 
 const rowCount = computed(() => {
   const first = Object.values(lastResult.value ?? {})[0];
-  return first && typeof first === "object" && "length" in first ? Number(first.length) : 0;
+  return first?.length ?? 0;
 });
 
-function readColumns(columns: Record<string, Column<ColumnData<Vector>>>): Record<string, Vector> {
+function readColumns<T extends ColumnMap>(frame: DataFrame<T>): Record<string, Vector> {
   return Object.fromEntries(
-    Object.entries(columns).map(([id, getter]) => [id, getter().valueOrThrow()!.data]),
+    Object.entries(frame.columns).map(([id, getter]) => [id, getter().valueOrThrow()!.data]),
   );
 }
 
-async function run({ id, run }: RunOptions) {
+function run({ id, frame }: RunOptions) {
   lastRun.value = id;
 
   const t0 = performance.now();
-  const data = await run();
+  const data = readColumns(frame);
   const ms = (performance.now() - t0).toFixed(1);
 
   lastResult.value = data;
